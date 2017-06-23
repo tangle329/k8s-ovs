@@ -123,41 +123,41 @@ $ /usr/sbin/k8s-ovs --etcd-endpoints=http://${etcd_ip}:2379 --etcd-prefix=/k8s.o
 测试方式：创建两个命名空间`helloworld1`和`helloworld2`，在`helloworld1`中创建两个POD和与之关联的一个SERVICE，在`helloworld2`中创建两个POD和与之关联的一个SERVICE。单个命名空间内的POD之间以及POD与SERVICE之间应该可以互通，不同命名空间的POD之间以及POD和SERVICE之间应该不可以互通。实例如下：
 
 ```
-$ kubectl get pod --namespace=helloworld1 -o wide                                                            <== 获取helloworld1中的POD
+$ kubectl get pod --namespace=helloworld1 -o wide                                <== 获取helloworld1中的POD
 NAME                           READY     STATUS    RESTARTS   AGE       IP             NODE
 helloworld1-2922187381-dz274   1/1       Running   0          20m       172.11.8.140   sdn-test2
 helloworld1-2922187381-nwn40   1/1       Running   0          20m       172.11.4.19    sdn-test3
 
-$ kubectl get svc --namespace=helloworld1                                                                         <== 获取helloworld1中的SERVICE
+$ kubectl get svc --namespace=helloworld1                                       <== 获取helloworld1中的SERVICE
 NAME          CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
 helloworld1   10.101.242.89   <none>        80/TCP    20m
 
-$ kubectl get pod --namespace=helloworld2 -o wide                                                            <== 获取helloworld2中的POD
+$ kubectl get pod --namespace=helloworld2 -o wide                               <== 获取helloworld2中的POD
 NAME                           READY     STATUS    RESTARTS   AGE       IP             NODE
 helloworld2-3233221239-6pj3c   1/1       Running   0          2m        172.11.8.144   sdn-test2
 helloworld2-3233221239-wl2mv   1/1       Running   0          2m        172.11.4.24    sdn-test3
 
-$ kubectl get svc --namespace=helloworld2                                                                         <== 获取helloworld2中的SERVICE
+$ kubectl get svc --namespace=helloworld2                                       <== 获取helloworld2中的SERVICE
 NAME          CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
 helloworld2   10.98.243.167   <none>        80/TCP    2m
 
-$ kubectl exec -it helloworld1-2922187381-dz274 /bin/sh --namespace=helloworld1          <== 进入helloworld1中的POD
+$ kubectl exec -it helloworld1-2922187381-dz274 /bin/sh --namespace=helloworld1 <== 进入helloworld1中的POD
 
-sh-4.1# ping 172.11.4.19                                                                                                      <== 从helloworld1中的POD去ping helloworld1的另一个POD能通
+sh-4.1# ping 172.11.4.19                                                        <== 从helloworld1中的POD去ping helloworld1的另一个POD能通
 PING 172.11.4.19 (172.11.4.19) 56(84) bytes of data.
 64 bytes from 172.11.4.19: icmp_seq=1 ttl=64 time=1.55 ms
 64 bytes from 172.11.4.19: icmp_seq=2 ttl=64 time=0.191 ms
 
-sh-4.1# curl 10.101.242.89                                                                                                   <== 从helloworld1中的POD去访问helloworld1中的SERVICE也能通
+sh-4.1# curl 10.101.242.89                                                      <== 从helloworld1中的POD去访问helloworld1中的SERVICE也能通
 Hello nginx
 
-sh-4.1# ping 172.11.8.144                                                                                                    <== 从helloworld1中的POD去访问helloworld2中的POD不能通
+sh-4.1# ping 172.11.8.144                                                       <== 从helloworld1中的POD去访问helloworld2中的POD不能通
 PING 172.11.8.144 (172.11.8.144) 56(84) bytes of data.
 ^C
 --- 172.11.8.144 ping statistics ---
 6 packets transmitted, 0 received, 100% packet loss, time 5093ms
 
-sh-4.1# curl 10.98.243.167                                                                                                   <== 从helloworld1中的POD去访问helloworld2中的SERVICE也不能通
+sh-4.1# curl 10.98.243.167                                                      <== 从helloworld1中的POD去访问helloworld2中的SERVICE也不能通
 ^C
 ```
 
@@ -201,26 +201,26 @@ $ etcdctl get /k8s.ovs.com/ovs/network/k8ssdn/netnamespaces/helloworld2
 合并之后观察helloworld1和helloworld2，发现两个租户的`NetID`变为相同的了。这样两个网络的POD和SERVICE就可以相互访问了。测试如下：
 
 ```
-$ kubectl get pod --namespace=helloworld1 -o wide                                      <== 获取helloworld1中的POD
+$ kubectl get pod --namespace=helloworld1 -o wide                                 <== 获取helloworld1中的POD
 NAME                           READY     STATUS    RESTARTS   AGE       IP             NODE
 helloworld1-2922187381-c0fml   1/1       Running   0          3m        172.11.4.29    sdn-test2
 helloworld1-2922187381-dwvdk   1/1       Running   0          3m        172.11.8.150   sdn-test3
 
-$ kubectl get svc --namespace=helloworld1                                                   <== 获取helloworld1中的SERVICE
+$ kubectl get svc --namespace=helloworld1                                         <== 获取helloworld1中的SERVICE
 NAME          CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
 helloworld1   10.100.225.143   <none>        80/TCP    3m
 
-$ kubectl get pod --namespace=helloworld2 -o wide                                      <== 获取helloworld2中的POD
+$ kubectl get pod --namespace=helloworld2 -o wide                                 <== 获取helloworld2中的POD
 NAME                           READY     STATUS    RESTARTS   AGE       IP             NODE
 helloworld2-3233221239-1ks8n   1/1       Running   0          5m        172.11.4.30    sdn-test2
 helloworld2-3233221239-g1d2w   1/1       Running   0          5m        172.11.8.151   sdn-test3
 
-$ kubectl get svc --namespace=helloworld2                                                   <== 获取helloworld2中的SERVICE
+$ kubectl get svc --namespace=helloworld2                                         <== 获取helloworld2中的SERVICE
 NAME          CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
 helloworld2   10.108.57.44   <none>        80/TCP    6m
 
-$ kubectl exec -it helloworld1-2922187381-c0fml /bin/sh --namespace=helloworld1                   <== 进入helloworld1中的pod
-sh-4.1# ping 172.11.4.30                                                                                 <== 从helloworld1中的POD去访问helloworld2中的POD能通
+$ kubectl exec -it helloworld1-2922187381-c0fml /bin/sh --namespace=helloworld1   <== 进入helloworld1中的pod
+sh-4.1# ping 172.11.4.30                                                          <== 从helloworld1中的POD去访问helloworld2中的POD能通
 PING 172.11.4.30 (172.11.4.30) 56(84) bytes of data.
 64 bytes from 172.11.4.30: icmp_seq=1 ttl=64 time=1.29 ms
 64 bytes from 172.11.4.30: icmp_seq=2 ttl=64 time=0.044 ms
@@ -229,7 +229,7 @@ PING 172.11.4.30 (172.11.4.30) 56(84) bytes of data.
 2 packets transmitted, 2 received, 0% packet loss, time 1352ms
 rtt min/avg/max/mdev = 0.044/0.669/1.294/0.625 ms
 
-sh-4.1# curl 10.108.57.44                                                                                <== 从helloworld1中的POD去访问helloworld2中的SERVICE能通
+sh-4.1# curl 10.108.57.44                                                         <== 从helloworld1中的POD去访问helloworld2中的SERVICE能通
 Hello nginx
 ```
 
@@ -249,14 +249,14 @@ $ etcdctl get /k8s.ovs.com/ovs/network/k8ssdn/netnamespaces/helloworld2
 分离之后观察helloworld1和helloworld2，发现两个租户的NetID由合并之后的相同变成了现在的不同，这样两个网络中的POD和SERVICE就再次变成了不可访问。测试如下：
 
 ```
-$ kubectl exec -it helloworld1-2922187381-c0fml /bin/sh --namespace=helloworld1       <== 进入helloworld1中的POD
-sh-4.1# ping 172.11.4.30                                                                                                  <== 从helloworld1中的POD去访问helloworld2中的POD不能通
+$ kubectl exec -it helloworld1-2922187381-c0fml /bin/sh --namespace=helloworld1  <== 进入helloworld1中的POD
+sh-4.1# ping 172.11.4.30                                                         <== 从helloworld1中的POD去访问helloworld2中的POD不能通
 PING 172.11.4.30 (172.11.4.30) 56(84) bytes of data.
 ^C
 --- 172.11.4.30 ping statistics ---
 3 packets transmitted, 0 received, 100% packet loss, time 2568ms
 
-sh-4.1# curl 10.108.57.44                                                                                                 <== 从helloworld1中的POD去访问helloworld2中的SERVICE不能通
+sh-4.1# curl 10.108.57.44                                                        <== 从helloworld1中的POD去访问helloworld2中的SERVICE不能通
 ^C
 ```
 
@@ -278,42 +278,42 @@ $ etcdctl get /k8s.ovs.com/ovs/network/k8ssdn/netnamespaces/helloworld1
 $ etcdctl get /k8s.ovs.com/ovs/network/k8ssdn/netnamespaces/helloworld2
 {"NetName":"helloworld2","NetID":3831805,"Action":"","Namespace":""}
 
-$ etcdctl get /k8s.ovs.com/ovs/network/k8ssdn/netnamespaces/helloworld3                                                                                                                                       <== 对helloworld3进行了全网通之后NetID变为了0
+$ etcdctl get /k8s.ovs.com/ovs/network/k8ssdn/netnamespaces/helloworld3       <== 对helloworld3进行了全网通之后NetID变为了0
 {"NetName":"helloworld3","NetID":0,"Action":"","Namespace":""}
 ```
 
 全网化之后我们观察到helloworld3的NetID变为了0，下面我们来进行通信测试：
 
 ```
-$ kubectl get pod --namespace=helloworld1 -o wide                                                           <== 获取helloworld1中的POD
+$ kubectl get pod --namespace=helloworld1 -o wide                              <== 获取helloworld1中的POD
 NAME                           READY     STATUS    RESTARTS   AGE       IP             NODE
 helloworld1-2922187381-c0fml   1/1       Running   0          30m       172.11.4.29    sdn-test2
 helloworld1-2922187381-dwvdk   1/1       Running   0          30m       172.11.8.150   sdn-test3
 
-$kubectl get svc --namespace=helloworld1                                                                         <== 获取helloworld1中的SERVICE
+$kubectl get svc --namespace=helloworld1                                       <== 获取helloworld1中的SERVICE
 NAME          CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
 helloworld1   10.100.225.143   <none>        80/TCP    31m
 
-$ kubectl get pod --namespace=helloworld2 -o wide                                                           <== 获取helloworld2中的POD
+$ kubectl get pod --namespace=helloworld2 -o wide                              <== 获取helloworld2中的POD
 NAME                           READY     STATUS    RESTARTS   AGE       IP             NODE
 helloworld2-3233221239-1ks8n   1/1       Running   0          30m       172.11.4.30    sdn-test2
 helloworld2-3233221239-g1d2w   1/1       Running   0          30m       172.11.8.151   sdn-test3
 
-$ kubectl get svc --namespace=helloworld2                                                                        <== 获取helloworld2中的SERVICE
+$ kubectl get svc --namespace=helloworld2                                      <== 获取helloworld2中的SERVICE
 NAME          CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
 helloworld2   10.108.57.44   <none>        80/TCP    31m
 
-$ kubectl get pod --namespace=helloworld3 -o wide                                                           <== 获取helloworld3中的POD
+$ kubectl get pod --namespace=helloworld3 -o wide                              <== 获取helloworld3中的POD
 NAME                           READY     STATUS    RESTARTS   AGE       IP             NODE
 helloworld3-3544255097-2lg46   1/1       Running   0          27s       172.11.4.31    sdn-test2
 helloworld3-3544255097-52dz1   1/1       Running   0          27s       172.11.8.152   sdn-test3
 
-$ kubectl get svc --namespace=helloworld3                                                                        <== 获取helloworld3中的SERVICE
+$ kubectl get svc --namespace=helloworld3                                      <== 获取helloworld3中的SERVICE
 NAME          CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
 helloworld3   10.98.68.157   <none>        80/TCP    2m
 
-$ kubectl exec -it helloworld3-3544255097-2lg46 /bin/sh --namespace=helloworld3          <== 进入helloworld3的POD中
-sh-4.1# ping 172.11.4.29                                                                                                     <== 从helloworld3中的POD去访问helloworld1中的POD能通
+$ kubectl exec -it helloworld3-3544255097-2lg46 /bin/sh --namespace=helloworld3 <== 进入helloworld3的POD中
+sh-4.1# ping 172.11.4.29                                                        <== 从helloworld3中的POD去访问helloworld1中的POD能通
 PING 172.11.4.29 (172.11.4.29) 56(84) bytes of data.
 64 bytes from 172.11.4.29: icmp_seq=1 ttl=64 time=0.584 ms
 ^C
@@ -321,10 +321,10 @@ PING 172.11.4.29 (172.11.4.29) 56(84) bytes of data.
 1 packets transmitted, 1 received, 0% packet loss, time 529ms
 rtt min/avg/max/mdev = 0.584/0.584/0.584/0.000 ms
 
-sh-4.1# curl 10.100.225.143                                                                                                <== 从helloworld3中的POD去访问helloworld1中的SERVICE能通
+sh-4.1# curl 10.100.225.143                                                     <== 从helloworld3中的POD去访问helloworld1中的SERVICE能通
 Hello nginx
 
-sh-4.1# ping 172.11.4.30                                                                                                     <== 从helloworld3中的POD去访问helloworld2中的POD能通
+sh-4.1# ping 172.11.4.30                                                        <== 从helloworld3中的POD去访问helloworld2中的POD能通
 PING 172.11.4.30 (172.11.4.30) 56(84) bytes of data.
 64 bytes from 172.11.4.30: icmp_seq=1 ttl=64 time=0.544 ms
 ^C
@@ -332,7 +332,7 @@ PING 172.11.4.30 (172.11.4.30) 56(84) bytes of data.
 1 packets transmitted, 1 received, 0% packet loss, time 469ms
 rtt min/avg/max/mdev = 0.544/0.544/0.544/0.000 ms
 
-sh-4.1# curl 10.108.57.44                                                                                                    <== 从helloworld3中的POD去访问helloworld2中的SERVICE能通
+sh-4.1# curl 10.108.57.44                                                       <== 从helloworld3中的POD去访问helloworld2中的SERVICE能通
 Hello nginx
 ```
 
@@ -372,16 +372,16 @@ spec:
 通过上面的yaml文件我们来创建POD，并对POD进行测试，下面将在helloworld1中创建两个POD，其中一个设置了入口和出口流量限制，另外一个完全没有设置。然后我们将在其中一个POD中启动iperf的服务，另外一个POD中启动iperf客户端来进行带宽测试。具体操作如下：
 
 ```
-$ kubectl get pod --namespace=helloworld1 -o wide                                                                     <== 从helloworld1中获取POD
+$ kubectl get pod --namespace=helloworld1 -o wide                                                        <== 从helloworld1中获取POD
 NAME                             READY     STATUS    RESTARTS   AGE       IP             NODE
-helloworld1-1-2154498866-m64d4   1/1       Running   0          13s       172.11.4.41    sdn-test2   <== 没有设置流量限制的POD
+helloworld1-1-2154498866-m64d4   1/1       Running   0          13s       172.11.4.41    sdn-test2       <== 没有设置流量限制的POD
 helloworld1-3097699521-sx6ll          1/1       Running   0          1m        172.11.8.162  sdn-test3   <== 设置了流量限制的POD
 
-$ kubectl exec -it helloworld1-1-2154498866-m64d4 /bin/sh --namespace=helloworld1               <== 进入没有设置流量限制的POD
+$ kubectl exec -it helloworld1-1-2154498866-m64d4 /bin/sh --namespace=helloworld1                        <== 进入没有设置流量限制的POD
 sh-4.1# iperf3 -s                                                                                                                              <== 启动iperf服务器
 
-$ kubectl exec -it helloworld1-3097699521-sx6ll /bin/sh --namespace=helloworld1                      <== 进入设置了流量限制的POD
-sh-4.1# iperf3 -c 172.11.4.41 -t 10                                                                                                  <== 从设置了流量限制的POD启动客服端
+$ kubectl exec -it helloworld1-3097699521-sx6ll /bin/sh --namespace=helloworld1                          <== 进入设置了流量限制的POD
+sh-4.1# iperf3 -c 172.11.4.41 -t 10                                                                      <== 从设置了流量限制的POD启动客服端
 Connecting to host 172.11.4.41, port 5201
 [  4] local 172.11.8.162 port 53838 connected to 172.11.4.41 port 5201
 [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
@@ -426,10 +426,10 @@ $ etcdctl get /k8s.ovs.com/ovs/network/k8ssdn/subnets/x.x.x.197
 上例中`x.x.x`是node节点ip地址的前三个数，这里由于隐私原因进行了隐藏。上面的etcd输出是k8s-ovs为K8S节点自动生成的。对于非K8S集群的node节点，如果要分配网段，则只需要按下列命令进行操作即可，注意：该操作中`Subnet`字段为空，`Assign`字段设置为true（true意味着请求k8s-ovs为该服务器分配子网），`Host`和`HostIP`则设置为负载均衡服务器的主机名和ip地址：
 
 ```
-$ etcdctl set /k8s.ovs.com/ovs/network/k8ssdn/subnets/x.x.x.199 '{"Host":"sdn-test1","HostIP":"x.x.x.197","Subnet":"","Assign":true}'
-{"Host":"sdn-test1","HostIP":"x.x.x.197","Subnet":"","Assign":true}
+$ etcdctl set /k8s.ovs.com/ovs/network/k8ssdn/subnets/x.x.x.199 '{"Host":"sdn-test4","HostIP":"x.x.x.197","Subnet":"","Assign":true}'
+{"Host":"sdn-test4","HostIP":"x.x.x.197","Subnet":"","Assign":true}
 $ etcdctl get /k8s.ovs.com/ovs/network/k8ssdn/subnets/x.x.x.199
-{"Host":"sdn-test1","HostIP":"x.x.x.197","Subnet":"172.11.12.0/22","Assign":false}
+{"Host":"sdn-test4","HostIP":"x.x.x.197","Subnet":"172.11.12.0/22","Assign":false}
 ```
 
 如上，设置之后，再重新获取该主机的网段信息，发现k8s-ovs分配了一个网段`172.11.12.0/22`出来。
