@@ -61,7 +61,7 @@ $ cp rootfs/opt/cni/bin/loopback /opt/cni/bin/
 $ cp rootfs/etc/cni/net.d/80-k8s-ovs.conf /etc/cni/net.d/
 $ go build -o rootfs/usr/sbin/k8s-ovs  k8s-ovs
 $ cp rootfs/usr/sbin/k8s-ovs /usr/sbin/
-$ cp rootfs/usr/sbin/k8s-ovs-ovs /usr/sbin/
+$ cp rootfs/usr/sbin/k8s-sdn-ovs /usr/sbin/
 ```
 
 其中第一个`go build -o rootfs/opt/cni/bin/k8s-ovs k8s-ovs/cniclient`生成的k8s-ovs是cni客户端，kubelet在创建和删除POD的时候会调用它来对POD的网络部分进行配置。第二个`go build -o rootfs/usr/sbin/k8s-ovs  k8s-ovs`生成的k8s-ovs是我们的整个k8s-ovs的核心，前面提到的所有功能都由它来实现，它也是cni的服务端，接受并处理前面cni客户端的请求。注意请不要把/opt/cni/bin/目录设置到PATH环境变量中。
