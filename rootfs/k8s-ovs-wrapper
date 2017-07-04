@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -ux
+
+if [ $# -le 7 ]; then
+	echo "usage: $0 ${ETCD_ENDPOINTS} ${POD_NETWORK} ${HOST_SUBNET_LEN} ${SERVICE_NETWORK} ${ETCD_PREFIX} ${HOSTNAME} ${ETCD_CA} ${ETCD_CERT} ${ETCD_KEY}"
+fi
+
+while true
+do
+	etcdctl --endpoints=$1 get $5/config
+	if [ $? -eq 0 ]; then
+		break
+	fi
+	etcdctl --endpoints=$1 set $5/config "{\"Name\":\"k8ssdn\", \"Network\": \"$2\", \"HostSubnetLength\":$3, \"ServiceNetwork\":\"$4\", \"PluginName\":\"k8s-ovs-multitenant\"}"
+	if [ $? -eq 0 ]; then
+		break
+	fi
+	sleep 1;
+done
+
+rm -f /host/opt/cni/bin/k8s-ovs
+rm -f /host/opt/cni/bin/loopback
+rm -f /host/opt/cni/bin/host-local
+rm -f /host/etc/cni/net.d/80-k8s-ovs.conf
+
+if [ -w "/host/opt/cni/bin/" ]; then
+        cp /opt/cni/bin/k8s-ovs       /host/opt/cni/bin/
+        cp /opt/cni/bin/loopback      /host/opt/cni/bin/
+        cp /opt/cni/bin/host-local    /host/opt/cni/bin/
+        echo "Wrote k8s-ovs CNI binaries to /host/opt/cni/bin/"
+fi
+
+if [ -w "/host/etc/cni/net.d/" ]; then
+        cp /etc/cni/net.d/80-k8s-ovs.conf /host/etc/cni/net.d/
+        echo "Wrote k8s-ovs config to /host/etc/cni/net.d/"
+fi
+
+echo "Done configuring CNI."
+
+if [ $# -lt 10 ]; then
+	/usr/sbin/k8s-ovs --etcd-endpoints=$1 --etcd-prefix=$5 --hostname=$6 --alsologtostderr --v=5
+else
+	/usr/sbin/k8s-ovs --etcd-endpoints=$1 --etcd-prefix=$5 --hostname=$6 --etcd-cafile=$7 --etcd-certfile=$8 --etcd-keyfile=$9 --alsologtostderr --v=5
+fi
