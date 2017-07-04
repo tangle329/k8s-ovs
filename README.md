@@ -7,7 +7,7 @@ k8s-ovs是一个使用[openvswitch](http://openvswitch.org/)为[K8S](https://kub
 
 如果对该项目有任何疑问，欢迎加入k8s-ovs-sdn的QQ交流群`477023854`进行讨论。
 
-下面将对k8s-ovs的功能和安装进行详细介绍，如果你想了解如果对功能进行配置可以跳转到[admin.md](https://github.com/tangle329/k8s-ovs/blob/master/admin.md)进行阅读。
+下面将对k8s-ovs的功能和安装进行详细介绍。如果你想了解不同功能的配置方法，可以跳转到[admin.md](https://github.com/tangle329/k8s-ovs/blob/master/admin.md)进行阅读。
 
 ## k8s-ovs的功能
 ---------------
