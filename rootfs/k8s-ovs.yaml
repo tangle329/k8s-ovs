@@ -1,0 +1,215 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-ovs-cni-plugin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-ovs-cni-plugin
+subjects:
+- kind: ServiceAccount
+  name: k8s-ovs-cni-plugin
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: k8s-ovs-cni-plugin
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "namespaces", "services", "configmaps"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: [""]
+    resources: ["pods", "endpoints"]
+    verbs: ["delete", "create", "update", "get"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-ovs-cni-plugin
+  namespace: kube-system
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: k8s-ovs-config
+  namespace: kube-system
+data:
+  etcd_endpoints: "http://10.96.232.136:6666"
+  etcd_prefix: "/k8s.ovs.com/ovs/network"
+  etcd_ca: ""
+  etcd_cert: ""
+  etcd_key: ""
+  etcd_service: "10.96.232.136:6666"
+  pod_network: "172.15.0.0/16"
+  host_subnet_len: "10"
+  service_network: "10.96.0.0/12"
+
+---
+
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: k8s-ovs-etcd
+  namespace: kube-system
+  labels:
+    k8s-app: k8s-ovs-etcd
+spec:
+  template:
+    metadata:
+      labels:
+        k8s-app: k8s-ovs-etcd
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      hostNetwork: true
+      containers:
+        - name: k8s-ovs-etcd
+          image: docker.io/at28997146/etcd-amd64:3.0.17
+          env:
+            - name: K8S_OVS_ETCD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          command: ["/bin/sh","-c"]
+          args: ["/usr/local/bin/etcd --name=k8s-ovs --data-dir=/var/etcd/k8s-ovs-data --advertise-client-urls=http://$K8S_OVS_ETCD_IP:6666 --listen-client-urls=http://0.0.0.0:6666 --listen-peer-urls=http://0.0.0.0:6667"]
+          volumeMounts:
+            - name: var-etcd
+              mountPath: /var/etcd
+      volumes:
+        - name: var-etcd
+          hostPath:
+            path: /var/etcd
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: k8s-ovs-etcd
+  name: k8s-ovs-etcd
+  namespace: kube-system
+spec:
+  selector:
+    k8s-app: k8s-ovs-etcd
+  clusterIP: 10.96.232.136
+  ports:
+    - port: 6666
+
+---
+
+kind: DaemonSet
+apiVersion: extensions/v1beta1
+metadata:
+  name: k8s-ovs-node
+  namespace: kube-system
+  labels:
+    k8s-app: k8s-ovs-node
+spec:
+  selector:
+    matchLabels:
+      k8s-app: k8s-ovs-node
+  template:
+    metadata:
+      labels:
+        k8s-app: k8s-ovs-node
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+    spec:
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+      serviceAccountName: k8s-ovs-cni-plugin
+      containers:
+        - name: k8s-ovs-node
+          image: docker.io/at28997146/k8s-ovs:v0.1.0
+          command: ["/bin/sh","-c"]
+          args: ["/k8s-ovs-wrapper ${ETCD_ENDPOINTS} ${POD_NETWORK} ${HOST_SUBNET_LEN} ${SERVICE_NETWORK} ${ETCD_PREFIX} ${HOSTNAME} ${ETCD_CA} ${ETCD_CERT} ${ETCD_KEY}"]
+          env:
+            - name: ETCD_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-ovs-config
+                  key: etcd_endpoints
+            - name: ETCD_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-ovs-config
+                  key: etcd_prefix
+            - name: ETCD_CA
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-ovs-config
+                  key: etcd_ca
+            - name: ETCD_CERT
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-ovs-config
+                  key: etcd_cert
+            - name: ETCD_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-ovs-config
+                  key: etcd_key
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NETWORK
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-ovs-config
+                  key: pod_network
+            - name: HOST_SUBNET_LEN
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-ovs-config
+                  key: host_subnet_len
+            - name: SERVICE_NETWORK
+              valueFrom:
+                configMapKeyRef:
+                  name: k8s-ovs-config
+                  key: service_network
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+            - mountPath: /var/run/
+              name: var-run-dir
+            - mountPath: /var/lib/cni/networks/
+              name: var-lib
+            - mountPath: /host/opt/cni/bin
+              name: cni-bin-dir
+            - mountPath: /host/etc/cni/net.d
+              name: cni-net-dir
+      volumes:
+        - name: var-run-dir
+          hostPath:
+            path: /var/run
+        - name: cni-bin-dir
+          hostPath:
+            path: /opt/cni/bin
+        - name: cni-net-dir
+          hostPath:
+            path: /etc/cni/net.d
+        - name: var-lib
+          hostPath:
+            path: /var/lib/cni/networks/
+---
+
