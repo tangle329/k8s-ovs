@@ -4,6 +4,7 @@ set -ux
 
 if [ $# -le 7 ]; then
 	echo "usage: $0 ${ETCD_ENDPOINTS} ${POD_NETWORK} ${HOST_SUBNET_LEN} ${SERVICE_NETWORK} ${ETCD_PREFIX} ${HOSTNAME} ${ETCD_CA} ${ETCD_CERT} ${ETCD_KEY}"
+	exit 1
 fi
 
 while true
