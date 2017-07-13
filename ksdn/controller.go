@@ -56,6 +56,9 @@ func (plugin *KsdnNode) getLocalSubnet() (string, error) {
 		var err error
 		subnet, err = plugin.eClient.GetSubnet(plugin.ctx, plugin.networkInfo.name, plugin.localIP)
 		if err == nil {
+			if strings.TrimSpace(subnet.Subnet) == "" {
+				return false, nil
+			}
 			return true, nil
 		} else if etcdv2.IsErrEtcdKeyNotFound(err) {
 			glog.Warningf("Could not find an allocated subnet for node: %s, Waiting...", plugin.localIP)
