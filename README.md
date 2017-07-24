@@ -1,7 +1,9 @@
 # k8s-ovs
 ==============================
 
-k8s-ovs是一个使用[openvswitch](http://openvswitch.org/)为[K8S](https://kubernetes.io/)提供SDN功能的项目。该项目基于[openshift SDN](https://docs.openshift.org/latest/architecture/additional_concepts/sdn.html)的原理进行开发。由于[openshift](https://github.com/openshift/origin)的SDN网络方案和openshift自身的代码耦合在一起，无法像[flannel](https://github.com/coreos/flannel)和[calico](https://github.com/projectcalico/calico)等网络方案以插件的方式独立的为K8S提供服务，所以我（隶属于万达网络科技集团云平台部）开发了k8s-ovs，它拥有openshift优秀的SDN功能，又可以独立为K8S提供服务。
+最近由于公司高层政治斗争，导致部门完全无法正常工作，故在此寻求一些工作机会。如果有kubernetes相关研发招聘的朋友，欢迎随时联系我。我的个人简历可以通过百度网盘：https://pan.baidu.com/s/1jI20TWa 下载。谢谢
+
+k8s-ovs是一个使用[openvswitch](http://openvswitch.org/)为[K8S](https://kubernetes.io/)提供SDN功能的项目。该项目基于[openshift SDN](https://docs.openshift.org/latest/architecture/additional_concepts/sdn.html)的原理进行开发。由于[openshift](https://github.com/openshift/origin)的SDN网络方案和openshift自身的代码耦合在一起，无法像[flannel](https://github.com/coreos/flannel)和[calico](https://github.com/projectcalico/calico)等网络方案以插件的方式独立的为K8S提供服务，所以我开发了k8s-ovs，它拥有openshift优秀的SDN功能，又可以独立为K8S提供服务。
 
 该项目中有一部分基础代码库是从openshift的pkg/sdn/plugin直接拷贝或进行了一些修改的。如果有License方面的问题请随时联系我进行修正：tangle3@wanda.cn。
 
