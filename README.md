@@ -58,7 +58,7 @@ sdn-test3   NotReady   6s        v1.6.4
 快速安装需要你部署K8S 1.6以上版本的集群，如果是1.5或者1.4的集群请下载yaml文件做相应修改。
 
 ```
-$ kubectl apply -f https://github.com/tangle329/k8s-ovs/tree/master/rootfs/k8s-ovs.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/tangle329/k8s-ovs/master/rootfs/k8s-ovs.yaml
 ```
 
 上面命令成功返回之后，你可以通过下列查询命令获取pod和node的运行状态来确认是否安装成功：
